@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: reactivedb
+    environment:
+      POSTGRES_DB: reactivedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: reactive-api
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: r2dbc:postgresql://db:5432/reactivedb
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      JWT_SECRET: MiClaveSecretaSuperSegura1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnop
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
